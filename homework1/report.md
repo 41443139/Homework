@@ -29,29 +29,39 @@ $$A(m, n) =  \begin{cases}  n + 1 & \text{if } m = 0 \\  A(m - 1, 1) & \text{if 
 ## 程式實作
 
 以下為包含「遞迴」與「非遞迴」兩版本的完整 C++ 程式碼：
-
+1.遞迴
 ```cpp
 #include <iostream>
 using namespace std;
-
-// 1. 遞迴版本
-int ackermann_recursive(int m, int n) {
-    if (m == 0)
-        return n + 1;
-    else if (n == 0)
-        return ackermann_recursive(m - 1, 1);
-    else
-        return ackermann_recursive(m - 1, ackermann_recursive(m, n - 1));
+int nfu(int m, int n) {
+if (m == 0) {
+return n + 1;
+}
+if (n == 0) {
+return nfu(m - 1, 1);
+}
+return nfu(m - 1, nfu(m, n - 1));
 }
 
-// 2. 非遞迴版本 (使用自訂 Stack)
+int main() {
+int m, n;
+cout << "輸入 m 和 n: ";
+cin >> m >> n;
+cout << "結果: " << nfu(m, n) << endl
+return 0;
+}
+```
+ 2. 非遞迴版本
+```cpp
+#include <iostream>
+using namespace std;
 int data(int m, int n) {
     int nfu[100000]; 
     int top = -1; 
     top++;
     nfu[top] = m;
     while (top >= 0) {
-        int cur_m = nfu[top];
+    int cur_m = nfu[top];
         top--;
         if (cur_m == 0) {
             n = n + 1;
@@ -71,12 +81,11 @@ int data(int m, int n) {
     }
     return n;
 }
-
 int main() {
     int m, n;
     cout << "請輸入 m 和 n: ";
     cin >> m >> n;
-    cout << "計算結果 (遞迴版):   " << ackermann_recursive(m, n) << endl;
-    cout << "計算結果 (非遞迴版): " << data(m, n) << endl;
+    cout << "計算結果 (非遞迴): " << data(m, n) << endl;
     return 0;
 }
+```
