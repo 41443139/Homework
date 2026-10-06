@@ -122,39 +122,39 @@ $ ./sigma
 ```cpp
 #include <iostream>
 using namespace std;
-
-// 非遞迴 Ackermann 函數 (使用陣列模擬 Stack)
-int ackermann(int m, int n) {
-    int nfu[100000]; // 宣告堆疊陣列
-    int top = -1;    // 頂端指標
-
-    // 將 initial m 推入堆疊
-    nfu[++top] = m;
-
+int data(int m, int n) {
+    int nfu[100000]; 
+    int top = -1; 
+    top++;
+    nfu[top] = m;
     while (top >= 0) {
-        int cur_m = nfu[top--]; // 取出頂端的 m
-
+    int cur_m = nfu[top];
+        top--;
         if (cur_m == 0) {
             n = n + 1;
         } 
         else if (n == 0) {
-            nfu[++top] = cur_m - 1;
+            top++;
+            nfu[top] = cur_m - 1; 
             n = 1;
         } 
         else {
-            nfu[++top] = cur_m - 1;
-            nfu[++top] = cur_m;     
+            top++;
+            nfu[top] = cur_m - 1;
+            top++;
+            nfu[top] = cur_m;  
             n = n - 1;
         }
     }
     return n;
 }
-
 int main() {
     int m, n;
-    cout << "請輸入 m 和 n: " << endl;
+    cout << "請輸入 m 和 n: ";
     cin >> m >> n;
-
+    cout << "計算結果 (非遞迴): " << data(m, n) << endl;
+    return 0;
+}
     cout << "計算結果 (非遞迴): " << ackermann(m, n) << endl;
 
     return 0;
