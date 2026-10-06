@@ -24,7 +24,7 @@
 
 以下為包含「遞迴」與「非遞迴」兩版本的完整 C++ 程式碼：
 
-###1.遞迴
+**遞迴版本：**
 ```cpp
 #include <iostream>
 using namespace std;
@@ -46,7 +46,7 @@ cout << "結果: " << nfu(m, n) << endl
 return 0;
 }
 ```
- ###2. 非遞迴版本
+**非遞迴版本：**
 ```cpp
 #include <iostream>
 using namespace std;
