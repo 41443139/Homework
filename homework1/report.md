@@ -176,19 +176,13 @@ $$
 #include <iostream>
 #include <string>
 using namespace std;
-
-// 遞迴函式：生成所有子集合
 void nfu(string S, int n, int index, string current) {
-    // 遞迴終止條件：已考慮完所有元素
     if (index == n) {
         cout << "(" << current << ")" << endl;
         return;
     }
     
-    // 選擇 1：不加入當前元素 S[index]
     nfu(S, n, index + 1, current);
-    
-    // 選擇 2：加入當前元素 S[index]
     nfu(S, n, index + 1, current + S[index]);
 }
 
@@ -210,3 +204,4 @@ int main() {
     
     return 0;
 }
+```
