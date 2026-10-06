@@ -154,66 +154,22 @@ $ ./ackermann
 ## 解題說明
 
 本作業旨在利用**遞迴（Recursion）**與**二元決策樹（Binary Decision Tree）**的概念，實作並探討如何列印出一個給定集合 $S$ 的所有子集合（即該集合的「冪集」 Power Set）。
+---
+
+# 作業二：冪集（Power Set）與子集合生成演算法實作
+
+## 解題說明
+
+本作業旨在利用**遞迴（Recursion）**與**二元決策樹（Binary Decision Tree）**的概念，實作並探討如何列印出一個給定集合 $S$ 的所有子集合（即該集合的「冪集」 Power Set）。
 
 ### 冪集（Power Set）定義
 
 若集合 $S$ 包含 $n$ 個元素，則 $S$ 的冪集 $\mathcal{P}(S)$ 為包含 $S$ 所有可能子集合（包含空集合與自身）的集合：
 
-$$\vert{}\mathcal{P}(S)\vert{} = 2^n$$
+$$
+|\mathcal{P}(S)| = 2^n
+$$
 
 對於集合中的每一個元素 $S[i]$，在建構子集合時都只有兩種選擇：
 1. **不納入（Exclude）：** 不將該元素加入當前子集合。
 2. **納入（Include）：** 將該元素加入當前子集合。
-
-### 解題策略
-
-1. **遞迴終止條件（Base Case）：**
-   - 當指標 `index == n` 時，代表已對集合中的所有 $n$ 個元素做完選擇，此時直接輸出當前累積的子集合字串 `current`。
-2. **遞迴狀態轉移（Recursive Step）：**
-   - **不選擇當前元素：** 呼叫 `nfu(S, n, index + 1, current)`，將處理位置移至下一個元素，但 `current` 保持不變。
-   - **選擇當前元素：** 呼叫 `nfu(S, n, index + 1, current + S[index])`，將當前元素 `S[index]` 串接至 `current` 後，再移至下一個元素。
-
----
-
-## 程式實作
-
-以下為列印集合所有子集合之完整 C++ 程式碼：
-
-```cpp
-#include <iostream>
-#include <string>
-using namespace std;
-
-// 遞迴函式：生成所有子集合
-void nfu(string S, int n, int index, string current) {
-    // 遞迴終止條件：已考慮完所有元素
-    if (index == n) {
-        cout << "(" << current << ")" << endl;
-        return;
-    }
-    
-    // 選擇 1：不加入當前元素 S[index]
-    nfu(S, n, index + 1, current);
-    
-    // 選擇 2：加入當前元素 S[index]
-    nfu(S, n, index + 1, current + S[index]);
-}
-
-int main() {
-    int n;
-    cout << "請輸入集合有幾個元素 (n): ";
-    cin >> n;
-    
-    string S = "";
-    cout << "請輸入 " << n << " 個字元 : ";
-    for (int i = 0; i < n; i++) {
-        char ch;
-        cin >> ch;
-        S += ch;
-    }
-    
-    cout << "nfu(S) 的所有子集合結果：" << endl;
-    nfu(S, n, 0, "");
-    
-    return 0;
-}
