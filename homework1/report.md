@@ -103,21 +103,32 @@ $ ./sigma
 透過遞迴實作 Sigma 計算，程式邏輯簡單且易於理解，特別適合展示遞迴的核心思想。然而，遞迴會因堆疊深度受到限制，當 $n$ 值過大時，應考慮使用迭代版本來避免 Stack Overflow 問題。
 
 
+# 41443139
+
+作業二
+
 ## 解題說明
 
 本題要求實現非遞迴（迭代）版本的阿克曼函數（Ackermann Function），計算 $A(m, n)$ 之值。
 
-阿克曼函數數學定義阿克曼函數為一個非原始遞迴函數（Non-primitive recursive function），定義如下：$$A(m, n) =  \begin{cases}  n + 1 & \text{if } m = 0 \\  A(m - 1, 1) & \text{if } m > 0 \text{ and } n = 0 \\  A(m - 1, A(m, n - 1)) & \text{if } m > 0 \text{ and } n > 0  \end{cases}$$
+### 阿克曼函數數學定義
+
+阿克曼函數為一個非原始遞迴函數（Non-primitive recursive function），定義如下：
+
+$$A(m, n) =  \begin{cases}  n + 1 & \text{if } m = 0 \\  A(m - 1, 1) & \text{if } m > 0 \text{ and } n = 0 \\  A(m - 1, A(m, n - 1)) & \text{if } m > 0 \text{ and } n > 0  \end{cases}$$
 
 ### 解題策略
 
-由於阿克曼函數的遞迴呼叫深度極深，容易導致系統 Call Stack 溢位（Stack Overflow），因此本實作採用自訂 Stack（陣列 nfu）來模擬系統呼叫堆疊，將遞迴轉化為非遞迴（迭代）流程：
-1.模擬 Call Stack： 使用一維陣列 nfu 充當堆疊，變數 top 追蹤 Stack 頂端位置，初始時將參數 $m$ 推入 Stack 中。
-2.迭代處理子任務（While 迴圈）：
-   情況一 (cur_m == 0)： 達到遞迴基底條件，將 $n$ 加 1（n = n + 1），表示完成一次外層計算。
-   情況二 (n == 0)： 對應 $A(m-1, 1)$，將 Stack 頂端的 $m$ 更新為 $cur\_m - 1$，並將 $n$ 重置為 1。
-   情況三 (m > 0 且 n > 0)： 對應 $A(m-1, A(m, n-1))$。由於需先算出內層 $A(m, n-1)$，故依序將外層任務 $cur\_m - 1$ 與內層任務        $cur\_m$ 推入 Stack，並將 $n$ 減 1（n = n - 1）。
-3.結束條件： 當 Stack 為空（top < 0）時結束迴圈，此時變數 $n$ 即為最終計算結果。
+由於阿克曼函數的遞迴呼叫深度極深，容易導致系統 Call Stack 溢位（Stack Overflow），因此本實作採用**自訂 Stack（陣列 `nfu`）**來模擬系統呼叫堆疊，將遞迴轉化為非遞迴（迭代）流程：
+
+1. **模擬 Call Stack：** 使用一維陣列 `nfu` 充當堆疊，變數 `top` 追蹤 Stack 頂端位置，初始時將參數 $m$ 推入 Stack 中。
+2. **迭代處理子任務（While 迴圈）：**
+   - **情況一 (`cur_m == 0`)：** 達到遞迴基底條件，將 $n$ 加 1（`n = n + 1`），表示完成一次外層計算。
+   - **情況二 (`n == 0`)：** 對應 $A(m-1, 1)$，將 Stack 頂端的 $m$ 更新為 $cur\_m - 1$，並將 $n$ 重置為 1。
+   - **情況三 (`m > 0` 且 `n > 0`)：** 對應 $A(m-1, A(m, n-1))$。由於需先算出內層 $A(m, n-1)$，故依序將外層任務 $cur\_m - 1$ 與內層任務 $cur\_m$ 推入 Stack，並將 $n$ 減 1（`n = n - 1`）。
+3. **結束條件：** 當 Stack 為空（`top < 0`）時結束迴圈，此時變數 $n$ 即為最終計算結果。
+
+---
 
 ## 程式實作
 
@@ -126,13 +137,14 @@ $ ./sigma
 ```cpp
 #include <iostream>
 using namespace std;
+
 int data(int m, int n) {
     int nfu[100000]; 
     int top = -1; 
     top++;
     nfu[top] = m;
     while (top >= 0) {
-    int cur_m = nfu[top];
+        int cur_m = nfu[top];
         top--;
         if (cur_m == 0) {
             n = n + 1;
@@ -152,6 +164,7 @@ int data(int m, int n) {
     }
     return n;
 }
+
 int main() {
     int m, n;
     cout << "請輸入 m 和 n: ";
@@ -159,9 +172,3 @@ int main() {
     cout << "計算結果 (非遞迴): " << data(m, n) << endl;
     return 0;
 }
-    cout << "計算結果 (非遞迴): " << ackermann(m, n) << endl;
-
-    return 0;
-}
-
-
