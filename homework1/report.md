@@ -1,6 +1,6 @@
 # 41443139
 
-作業1_1
+**作業1_1**
 
 ## 解題說明
 
@@ -151,7 +151,7 @@ $ ./ackermann
 
 
 
-作業1_1
+**作業1_2**
 
 ## 解題說明
 
@@ -168,3 +168,45 @@ $$
 對於集合中的每一個元素 $S[i]$，在建構子集合時都只有兩種選擇：
 1. **不納入（Exclude）：** 不將該元素加入當前子集合。
 2. **納入（Include）：** 將該元素加入當前子集合。
+## 程式實作
+
+以下為列印集合所有子集合之完整 C++ 程式碼：
+
+```cpp
+#include <iostream>
+#include <string>
+using namespace std;
+
+// 遞迴函式：生成所有子集合
+void nfu(string S, int n, int index, string current) {
+    // 遞迴終止條件：已考慮完所有元素
+    if (index == n) {
+        cout << "(" << current << ")" << endl;
+        return;
+    }
+    
+    // 選擇 1：不加入當前元素 S[index]
+    nfu(S, n, index + 1, current);
+    
+    // 選擇 2：加入當前元素 S[index]
+    nfu(S, n, index + 1, current + S[index]);
+}
+
+int main() {
+    int n;
+    cout << "請輸入集合有幾個元素 (n): ";
+    cin >> n;
+    
+    string S = "";
+    cout << "請輸入 " << n << " 個字元 : ";
+    for (int i = 0; i < n; i++) {
+        char ch;
+        cin >> ch;
+        S += ch;
+    }
+    
+    cout << "nfu(S) 的所有子集合結果：" << endl;
+    nfu(S, n, 0, "");
+    
+    return 0;
+}
