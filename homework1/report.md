@@ -27,8 +27,8 @@ int sigma(int n) {
     else if (n <= 1)
         return n;
     return n + sigma(n - 1);
-}
 
+}
 int main() {
     int result = sigma(3);
     cout << result << '\n';
@@ -108,7 +108,7 @@ $ ./sigma
 
 作業二
 
-# 41143263
+# 41443139
 
 作業一
 
@@ -209,6 +209,7 @@ $ g++ -std=c++17 -o ackermann ackermann.cpp
 $ ./ackermann
 請輸入 m 和 n: 3 3
 計算結果 (非遞迴): 61
+```
 
 ### 結論
 
