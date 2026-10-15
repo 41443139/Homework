@@ -1,1 +1,89 @@
+#include <iostream>
 
+using namespace std; // 高中生最常直接 namespace
+
+class Polynomial; // 前置宣告[cite: 2]
+
+class Term {
+    friend class Polynomial; // 讓 Polynomial 可以直接摸私有變數[cite: 2]
+    friend istream& operator>>(istream& in, Polynomial& p); // 讓 >> 也可以用[cite: 3]
+    friend ostream& operator<<(ostream& out, Polynomial& p); // 讓 << 也可以用[cite: 3]
+private:
+    float coef; // 係數[cite: 2]
+    int exp;    // 次方[cite: 2]
+};
+
+class Polynomial {
+    friend istream& operator>>(istream& in, Polynomial& p); // 宣告輸入運算子[cite: 3]
+    friend ostream& operator<<(ostream& out, Polynomial& p); // 宣告輸出運算子[cite: 3]
+
+private:
+    Term *termArray; // 存單項的陣列指標[cite: 2]
+    int capacity;    // 陣列容量[cite: 2]
+    int terms;       // 裡面有幾項[cite: 2]
+
+public:
+    Polynomial() {
+        capacity = 100; // 一樣先開好 100 格[cite: 2]
+        terms = 0;      // 預設 0 項[cite: 2]
+        termArray = new Term[capacity];
+    }
+
+    ~Polynomial() {
+        delete[] termArray; // 清除記憶體
+    }
+
+    // 存進陣列的函式[cite: 2]
+    void NewTerm(float c, int e) {
+        if (c == 0) return; // 係數為 0 略過[cite: 1, 2]
+        termArray[terms].coef = c;[cite: 2]
+        termArray[terms].exp = e;[cite: 2]
+        terms++;[cite: 2]
+    }
+};
+
+// 重載 >> 運算子（輸入）[cite: 3]
+// 題目邏輯：先輸入這多項式有幾項，再連續輸入每項的 (係數 次方)[cite: 2]
+istream& operator>>(istream& in, Polynomial& p) {
+    p.terms = 0; // 先把原本的項數歸零重新讀入
+    int n;       // 存總共要輸幾項
+    cout << "請輸入有幾項: ";
+    in >> n;     // 讀取項數
+    for (int i = 0; i < n; i++) {
+        float c;
+        int e;
+        cout << "請輸入第 " << i + 1 << " 項的係數與次方: ";
+        in >> c >> e; // 讀入係數跟次方
+        p.NewTerm(c, e); // 丟進去多項式存起來[cite: 2]
+    }
+    return in; // 回傳 in，這樣可以 cin >> a >> b 連著寫
+}
+
+// 重載 << 運算子（輸出）[cite: 3]
+ostream& operator<<(ostream& out, Polynomial& p) {
+    if (p.terms == 0) { // 如果裡面完全沒東西就是 0
+        out << "0";
+        return out;
+    }
+
+    for (int i = 0; i < p.terms; i++) {
+        out << p.termArray[i].coef << "x^" << p.termArray[i].exp;[cite: 2]
+        // 只要不是最後一項，就在後面補一個加號[cite: 2]
+        if (i < p.terms - 1) {
+            out << " + ";
+        }
+    }
+    return out; // 回傳 out，這樣可以 cout << a << endl 連著寫
+}
+
+int main() {
+    Polynomial myPoly; // 宣告一個多項式物件[cite: 1]
+
+    // 測試 cin >>[cite: 3]
+    cin >> myPoly;
+
+    // 測試 cout <<[cite: 3]
+    cout << "你輸入的多項式長這樣: " << myPoly << endl;
+
+    return 0;
+}
