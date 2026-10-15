@@ -1,1 +1,152 @@
+#include <iostream>
+#include <cmath> // 要用 pow 算次方
 
+using namespace std; // 高中生寫扣必備
+
+class Polynomial; // 先跟編譯器說後面有 Polynomial 這個類別[cite: 2]
+
+// 定義每一項的長相[cite: 2]
+class Term {
+    friend class Polynomial; // 讓 Polynomial 可以直接用這裡的變數[cite: 2]
+private:
+    float coef; // 係數[cite: 2]
+    int exp;    // 次方（指數）[cite: 2]
+};
+
+// 多項式類別[cite: 1]
+class Polynomial {
+private:
+    Term *termArray; // 存每一項的陣列[cite: 2]
+    int capacity;    // 陣列最多能塞幾項[cite: 2]
+    int terms;       // 現在裡面有幾項[cite: 2]
+
+public:
+    // 建構子：一開始先開個夠大的陣列（例如100格），這樣就不用一直擴充[cite: 1, 2]
+    Polynomial() {
+        capacity = 100; // 先開 100 格[cite: 2]
+        terms = 0;      // 一開始沒有任何項[cite: 2]
+        termArray = new Term[capacity]; // 要記憶體空間[cite: 2]
+    }
+
+    // 解構子：用完把陣列還給系統
+    ~Polynomial() {
+        delete[] termArray;
+    }
+
+    // 塞一項進多項式[cite: 1, 2]
+    void NewTerm(float c, int e) {
+        if (c == 0) return; // 係數是 0 就不用存了[cite: 1, 2]
+        termArray[terms].coef = c; // 把係數放進去[cite: 2]
+        termArray[terms].exp = e;  // 把次方放進去[cite: 2]
+        terms++; // 項數加一[cite: 2]
+    }
+
+    // 兩多項式相加[cite: 1]
+    Polynomial Add(Polynomial poly) {
+        Polynomial ans; // 存答案用的多項式
+        int i = 0; // 跑自己的陣列
+        int j = 0; // 跑對方的陣列
+
+        // 兩個都還沒跑完時比次方大小
+        while (i < terms && j < poly.terms) {
+            if (termArray[i].exp == poly.termArray[j].exp) { // 次方一樣[cite: 2]
+                float sum = termArray[i].coef + poly.termArray[j].coef; // 係數相加[cite: 2]
+                if (sum != 0) {
+                    ans.NewTerm(sum, termArray[i].exp); // 係數沒抵銷就存起來[cite: 1, 2]
+                }
+                i++;
+                j++;
+            } else if (termArray[i].exp < poly.termArray[j].exp) { // 對方次方比較大[cite: 2]
+                ans.NewTerm(poly.termArray[j].coef, poly.termArray[j].exp); // 先塞對方的[cite: 2]
+                j++;
+            } else { // 自己次方比較大
+                ans.NewTerm(termArray[i].coef, termArray[i].exp); // 先塞自己的[cite: 2]
+                i++;
+            }
+        }
+
+        // 把自己剩下的通通塞進去
+        while (i < terms) {
+            ans.NewTerm(termArray[i].coef, termArray[i].exp);[cite: 2]
+            i++;
+        }
+        // 把對方剩下的通通塞進去
+        while (j < poly.terms) {
+            ans.NewTerm(poly.termArray[j].coef, poly.termArray[j].exp);[cite: 2]
+            j++;
+        }
+
+        return ans; // 回傳算好的多項式
+    }
+
+    // 兩多項式相乘[cite: 1]
+    Polynomial Mult(Polynomial poly) {
+        Polynomial ans; // 存最後乘出來的結果
+        // 用兩層迴圈讓每一項互相乘[cite: 1]
+        for (int i = 0; i < terms; i++) {
+            Polynomial temp; // 拿來暫存乘出來的單項
+            for (int j = 0; j < poly.terms; j++) {
+                float c = termArray[i].coef * poly.termArray[j].coef; // 係數相乘[cite: 2]
+                int e = termArray[i].exp + poly.termArray[j].exp;     // 次方相加[cite: 2]
+                temp.NewTerm(c, e);
+            }
+            ans = ans.Add(temp); // 把每一次乘出來的結果加進去[cite: 1]
+        }
+        return ans;
+    }
+
+    // 代入數字 x = f 算答案[cite: 1]
+    float Eval(float f) {
+        float sum = 0; // 存算出來的總和
+        for (int i = 0; i < terms; i++) {
+            sum += termArray[i].coef * pow(f, termArray[i].exp); // 係數乘上 f 的次方[cite: 1, 2]
+        }
+        return sum; // 回傳算出來的答案[cite: 1]
+    }
+
+    // 印出來看看長怎樣
+    void Print() {
+        if (terms == 0) {
+            cout << "0" << endl;
+            return;
+        }
+        for (int i = 0; i < terms; i++) {
+            cout << termArray[i].coef << "x^" << termArray[i].exp;[cite: 2]
+            if (i < terms - 1) cout << " + "; // 最後一項後面不要加號
+        }
+        cout << endl;
+    }
+};
+
+int main() {
+    // 建立第 1 個多項式：3x^2 + 2x^1 + 1x^0
+    Polynomial p1;
+    p1.NewTerm(3, 2);
+    p1.NewTerm(2, 1);
+    p1.NewTerm(1, 0);
+
+    // 建立第 2 個多項式：5x^2 + 4x^0
+    Polynomial p2;
+    p2.NewTerm(5, 2);
+    p2.NewTerm(4, 0);
+
+    cout << "p1 = ";
+    p1.Print();
+    cout << "p2 = ";
+    p2.Print();
+
+    // 測加法[cite: 1]
+    Polynomial p3 = p1.Add(p2);
+    cout << "p1 + p2 = ";
+    p3.Print();
+
+    // 測乘法[cite: 1]
+    Polynomial p4 = p1.Mult(p2);
+    cout << "p1 * p2 = ";
+    p4.Print();
+
+    // 測代數字進去算（x = 2）[cite: 1]
+    cout << "p1(2) = " << p1.Eval(2) << endl;
+
+    return 0;
+}
