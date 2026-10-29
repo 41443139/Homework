@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cmath>
-#include <ctime>
+
 using namespace std;
 
 class Polynomial;
@@ -10,52 +10,57 @@ class Term {
     friend ostream& operator<<(ostream& os, const Polynomial& p);
     friend istream& operator>>(istream& is, Polynomial& p);
 private:
-    float coef;  // 係數
-    int exp;     // 次方
+    float coef;
+    int exp;
 };
 
 class Polynomial {
     friend ostream& operator<<(ostream& os, const Polynomial& p);
     friend istream& operator>>(istream& is, Polynomial& p);
+
 private:
     Term* termArray;
-    int capacity;  // 陣列目前能放幾項
-    int terms;     // 目前有幾項
+    int capacity;
+    int terms;
 
-    // 陣列滿了就開兩倍大的
-    void Resize() {
-        capacity = capacity * 2;
-        Term* temp = new Term[capacity];
-        for (int i = 0; i < terms; i++)
-            temp[i] = termArray[i];
-        delete[] termArray;
-        termArray = temp;
-    }
+    void NewTerm(float c, int e) {
+        if (c == 0.0f) return;
 
-    // 新增一項:如果已經有相同次方就直接加上去
-    void AddTerm(float c, int e) {
         for (int i = 0; i < terms; i++) {
             if (termArray[i].exp == e) {
-                termArray[i].coef = termArray[i].coef + c;
+                termArray[i].coef += c;
+                if (termArray[i].coef == 0.0f) {
+                    for (int j = i; j < terms - 1; j++) {
+                        termArray[j] = termArray[j + 1];
+                    }
+                    terms--;
+                }
                 return;
             }
         }
-        if (terms == capacity)
-            Resize();
+
+        if (terms >= capacity) {
+            capacity *= 2;
+            Term* temp = new Term[capacity];
+            for (int i = 0; i < terms; i++) {
+                temp[i] = termArray[i];
+            }
+            delete[] termArray;
+            termArray = temp;
+        }
+
         termArray[terms].coef = c;
         termArray[terms].exp = e;
         terms++;
-    }
 
-    // 把次方由大排到小 (泡沫排序)
-    void Sort() {
-        for (int i = 0; i < terms - 1; i++) {
-            for (int j = 0; j < terms - 1 - i; j++) {
-                if (termArray[j].exp < termArray[j + 1].exp) {
-                    Term temp = termArray[j];
-                    termArray[j] = termArray[j + 1];
-                    termArray[j + 1] = temp;
-                }
+        for (int i = terms - 1; i > 0; i--) {
+            if (termArray[i].exp > termArray[i - 1].exp) {
+                Term temp = termArray[i];
+                termArray[i] = termArray[i - 1];
+                termArray[i - 1] = temp;
+            }
+            else {
+                break;
             }
         }
     }
@@ -67,13 +72,13 @@ public:
         termArray = new Term[capacity];
     }
 
-    // 因為有 new 所以要寫 copy constructor
     Polynomial(const Polynomial& p) {
         capacity = p.capacity;
         terms = p.terms;
         termArray = new Term[capacity];
-        for (int i = 0; i < terms; i++)
+        for (int i = 0; i < terms; i++) {
             termArray[i] = p.termArray[i];
+        }
     }
 
     ~Polynomial() {
@@ -81,114 +86,191 @@ public:
     }
 
     Polynomial& operator=(const Polynomial& p) {
-        if (this != &p) {
-            delete[] termArray;
-            capacity = p.capacity;
-            terms = p.terms;
-            termArray = new Term[capacity];
-            for (int i = 0; i < terms; i++)
-                termArray[i] = p.termArray[i];
+        if (this == &p) return *this;
+
+        delete[] termArray;
+        capacity = p.capacity;
+        terms = p.terms;
+        termArray = new Term[capacity];
+        for (int i = 0; i < terms; i++) {
+            termArray[i] = p.termArray[i];
         }
         return *this;
     }
 
-    // 相加
     Polynomial Add(Polynomial poly) {
-        Polynomial result;
-        for (int i = 0; i < terms; i++)
-            result.AddTerm(termArray[i].coef, termArray[i].exp);
-        for (int i = 0; i < poly.terms; i++)
-            result.AddTerm(poly.termArray[i].coef, poly.termArray[i].exp);
-        result.Sort();
-        return result;
+        Polynomial ans;
+        int i = 0, j = 0;
+
+        while (i < terms && j < poly.terms) {
+            if (termArray[i].exp == poly.termArray[j].exp) {
+                float sum = termArray[i].coef + poly.termArray[j].coef;
+                if (sum != 0.0f) {
+                    ans.NewTerm(sum, termArray[i].exp);
+                }
+                i++;
+                j++;
+            }
+            else if (termArray[i].exp < poly.termArray[j].exp) {
+                ans.NewTerm(poly.termArray[j].coef, poly.termArray[j].exp);
+                j++;
+            }
+            else {
+                ans.NewTerm(termArray[i].coef, termArray[i].exp);
+                i++;
+            }
+        }
+
+        for (; i < terms; i++) ans.NewTerm(termArray[i].coef, termArray[i].exp);
+        for (; j < poly.terms; j++) ans.NewTerm(poly.termArray[j].coef, poly.termArray[j].exp);
+
+        return ans;
     }
 
-    // 相乘
     Polynomial Mult(Polynomial poly) {
-        Polynomial result;
+        Polynomial ans;
         for (int i = 0; i < terms; i++) {
             for (int j = 0; j < poly.terms; j++) {
                 float c = termArray[i].coef * poly.termArray[j].coef;
                 int e = termArray[i].exp + poly.termArray[j].exp;
-                result.AddTerm(c, e);
+                ans.NewTerm(c, e);
             }
         }
-        result.Sort();
-        return result;
+        return ans;
     }
 
-    // 代入 x 算值
-    float Eval(float x) {
-        float sum = 0;
+    float Eval(float f) {
+        float ans = 0;
         for (int i = 0; i < terms; i++) {
-            sum = sum + termArray[i].coef * pow(x, termArray[i].exp);
+            ans += termArray[i].coef * static_cast<float>(pow(f, termArray[i].exp));
         }
-        return sum;
+        return ans;
     }
 };
 
-// 輸入:先輸入項數,再輸入每一項的係數和次方
 istream& operator>>(istream& is, Polynomial& p) {
     int n;
-    is >> n;
-    p.terms = 0;  // 先把舊的清掉
+    if (!(is >> n)) return is;
+
+    p.terms = 0;
+
     for (int i = 0; i < n; i++) {
         float c;
         int e;
         is >> c >> e;
-        p.AddTerm(c, e);
+        p.NewTerm(c, e);
     }
-    p.Sort();
     return is;
 }
 
-// 輸出
 ostream& operator<<(ostream& os, const Polynomial& p) {
-    bool first = true;  // 是不是第一個印出來的項
-    for (int i = 0; i < p.terms; i++) {
-        if (p.termArray[i].coef == 0)
-            continue;  // 係數是 0 就不印
-
-        if (!first && p.termArray[i].coef > 0)
-            os << "+";
-        os << p.termArray[i].coef;
-        if (p.termArray[i].exp != 0)
-            os << "x^" << p.termArray[i].exp;
-        first = false;
+    if (p.terms == 0) {
+        os << "0";
+        return os;
     }
-    if (first)
-        os << 0;  // 全部都是 0
+
+    for (int i = 0; i < p.terms; i++) {
+        float c = p.termArray[i].coef;
+        int e = p.termArray[i].exp;
+
+        if (i > 0) {
+            if (c > 0) {
+                os << " + ";
+            }
+            else {
+                os << " - ";
+                c = -c;
+            }
+        }
+        else {
+            if (c < 0) {
+                os << "-";
+                c = -c;
+            }
+        }
+
+        if (e == 0) {
+            os << c;
+        }
+        else if (e == 1) {
+            if (c == 1.0f) os << "x";
+            else os << c << "x";
+        }
+        else {
+            if (c == 1.0f) os << "x^" << e;
+            else os << c << "x^" << e;
+        }
+    }
     return os;
 }
 
 int main() {
-    Polynomial p1, p2;
+    Polynomial A, B;
 
-    cout << "請輸入多項式1 (項數 係數 次方 ...): ";
-    cin >> p1;
-    cout << "請輸入多項式2 (項數 係數 次方 ...): ";
-    cin >> p2;
+    cout << "請輸入多項式 A: ";
+    cin >> A;
 
-    cout << "P1(x) = " << p1 << endl;
-    cout << "P2(x) = " << p2 << endl;
+    cout << "請輸入多項式 B: ";
+    cin >> B;
 
-    Polynomial sum = p1.Add(p2);
-    cout << "P1 + P2 = " << sum << endl;
+    int choice;
+    while (true) {
+        cout << "\n======== Polynomial 選單 ========" << endl;
+        cout << "1. 顯示 A、B" << endl;
+        cout << "2. A + B" << endl;
+        cout << "3. A * B" << endl;
+        cout << "4. 計算 A(x)" << endl;
+        cout << "5. 計算 B(x)" << endl;
+        cout << "6. 重新輸入 A" << endl;
+        cout << "7. 重新輸入 B" << endl;
+        cout << "0. 結束程式" << endl;
+        cout << "選擇: ";
 
-    Polynomial product = p1.Mult(p2);
-    cout << "P1 * P2 = " << product << endl;
+        if (!(cin >> choice)) break;
 
-    float x = 2;
-    cout << "P1(" << x << ") = " << p1.Eval(x) << endl;
+        if (choice == 0) {
+            break;
+        }
 
-    // 算 10000 次相乘要多久
-    clock_t start = clock();
-    for (int i = 0; i < 10000; i++) {
-        Polynomial t = p1.Mult(p2);
+        cout << endl;
+
+        if (choice == 1) {
+            cout << "A(x) = " << A << endl;
+            cout << "B(x) = " << B << endl;
+        }
+        else if (choice == 2) {
+            cout << "A(x) = " << A << endl;
+            cout << "B(x) = " << B << endl;
+            Polynomial sum = A.Add(B);
+            cout << "A + B = " << sum << endl;
+        }
+        else if (choice == 3) {
+            cout << "A(x) = " << A << endl;
+            cout << "B(x) = " << B << endl;
+            Polynomial prod = A.Mult(B);
+            cout << "A * B = " << prod << endl;
+        }
+        else if (choice == 4) {
+            float x;
+            cout << "請輸入 x 的值: ";
+            cin >> x;
+            cout << "A(" << x << ") = " << A.Eval(x) << endl;
+        }
+        else if (choice == 5) {
+            float x;
+            cout << "請輸入 x 的值: ";
+            cin >> x;
+            cout << "B(" << x << ") = " << B.Eval(x) << endl;
+        }
+        else if (choice == 6) {
+            cout << "請輸入多項式 A: ";
+            cin >> A;
+        }
+        else if (choice == 7) {
+            cout << "請輸入多項式 B: ";
+            cin >> B;
+        }
     }
-    clock_t end = clock();
-    double ms = (double)(end - start) * 1000 / CLOCKS_PER_SEC;
-    cout << "相乘 10000 次花了 " << ms << " ms" << endl;
 
     return 0;
 }
