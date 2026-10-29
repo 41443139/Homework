@@ -17,8 +17,18 @@
    - 多項式加法 (Add)：利用雙指標法（Two Pointers）同步遍歷兩多項式陣列，針對同次項相加、不同次項則優先將較高次方項複製至新物件，時間效率為線性。
    - 多項式乘法 (Mult)：雙層迴圈逐項相乘，將結果依序呼叫 NewTerm 自動累加合併同類項。
    - 代入求值 (Eval)：遍歷所有非零項，呼叫 pow(x, exp) 計算各項數值並累加總。
+1. 資料結構設計：
+   - Term 類別：儲存單項的係數（coef，浮點數）與次方（exp，整數）。
+   - Polynomial 類別：內部封裝動態陣列指標 termArray、當前容量 capacity 及實際有效項數 terms。
+   - 動態擴充機制：預設容量為 4，當陣列空間不足時採用「倍增策略（capacity *= 2）」，並重新配置記憶體。
 
-3.**I/O 運算子多載：**
+2. 核心運算方法：
+   - 新增與合併項目 (NewTerm)：新增單項時若遇到同次項則累加係數；若累加後係數為 0 則移除該項並將後續項目向前平移；若為新次項則依次方由大到小（降冪）排序插入。
+   - 多項式加法 (Add)：利用雙指標法（Two Pointers）同步遍歷兩多項式陣列，針對同次項相加、不同次項則優先將較高次方項複製至新物件，時間效率為線性。
+   - 多項式乘法 (Mult)：雙層迴圈逐項相乘，將結果依序呼叫 NewTerm 自動累加合併同類項。
+   - 代入求值 (Eval)：遍歷所有非零項，呼叫 pow(x, exp) 計算各項數值並累加總。
+
+3. I/O 運算子多載：
    - 重載 operator>>：先讀取項數 $n$，再依序讀入每一項的係數與次方。
    - 重載 operator<<：格式化輸出多項式，處理正負號連接、省略係數 1、常數項與一階項次方的美化呈現。
 ---
@@ -27,66 +37,265 @@
 
 以下為包含「遞迴」與「非遞迴」兩版本的完整 C++ 程式碼：
 
-**遞迴版本：**
+**程式實作**
 ```cpp
 #include <iostream>
+#include <cmath>
+
 using namespace std;
-int nfu(int m, int n) {
-if (m == 0) {
-return n + 1;
+
+class Polynomial;
+
+class Term {
+    friend class Polynomial;
+    friend ostream& operator<<(ostream& os, const Polynomial& p);
+    friend istream& operator>>(istream& is, Polynomial& p);
+private:
+    float coef;
+    int exp;
+};
+
+class Polynomial {
+    friend ostream& operator<<(ostream& os, const Polynomial& p);
+    friend istream& operator>>(istream& is, Polynomial& p);
+private:
+    Term* termArray;
+    int capacity;
+    int terms;
+
+    void NewTerm(float c, int e) {
+        if (c == 0.0f) return;
+        for (int i = 0; i < terms; i++) {
+            if (termArray[i].exp == e) {
+                termArray[i].coef += c;
+                if (termArray[i].coef == 0.0f) {
+                    for (int j = i; j < terms - 1; j++) {
+                        termArray[j] = termArray[j + 1];
+                    }
+                    terms--;
+                }
+                return;
+            }
+        }
+        if (terms >= capacity) {
+            capacity *= 2;
+            Term* temp = new Term[capacity];
+            for (int i = 0; i < terms; i++) {
+                temp[i] = termArray[i];
+            }
+            delete[] termArray;
+            termArray = temp;
+        }
+        termArray[terms].coef = c;
+        termArray[terms].exp = e;
+        terms++;
+
+        for (int i = terms - 1; i > 0; i--) {
+            if (termArray[i].exp > termArray[i - 1].exp) {
+                Term temp = termArray[i];
+                termArray[i] = termArray[i - 1];
+                termArray[i - 1] = temp;
+            }
+            else {
+                break;
+            }
+        }
+    }
+public:
+    Polynomial() {
+        capacity = 4;
+        terms = 0;
+        termArray = new Term[capacity];
+    }
+    Polynomial(const Polynomial& p) {
+        capacity = p.capacity;
+        terms = p.terms;
+        termArray = new Term[capacity];
+        for (int i = 0; i < terms; i++) {
+            termArray[i] = p.termArray[i];
+        }
+    }
+    ~Polynomial() {
+        delete[] termArray;
+    }
+    Polynomial& operator=(const Polynomial& p) {
+        if (this == &p) return *this;
+
+        delete[] termArray;
+        capacity = p.capacity;
+        terms = p.terms;
+        termArray = new Term[capacity];
+        for (int i = 0; i < terms; i++) {
+            termArray[i] = p.termArray[i];
+        }
+        return *this;
+    }
+    Polynomial Add(Polynomial poly) {
+        Polynomial ans;
+        int i = 0, j = 0;
+
+        while (i < terms && j < poly.terms) {
+            if (termArray[i].exp == poly.termArray[j].exp) {
+                float sum = termArray[i].coef + poly.termArray[j].coef;
+                if (sum != 0.0f) {
+                    ans.NewTerm(sum, termArray[i].exp);
+                }
+                i++;
+                j++;
+            }
+            else if (termArray[i].exp < poly.termArray[j].exp) {
+                ans.NewTerm(poly.termArray[j].coef, poly.termArray[j].exp);
+                j++;
+            }
+            else {
+                ans.NewTerm(termArray[i].coef, termArray[i].exp);
+                i++;
+            }
+        }
+
+        for (; i < terms; i++) ans.NewTerm(termArray[i].coef, termArray[i].exp);
+        for (; j < poly.terms; j++) ans.NewTerm(poly.termArray[j].coef, poly.termArray[j].exp);
+
+        return ans;
+    }
+    Polynomial Mult(Polynomial poly) {
+        Polynomial ans;
+        for (int i = 0; i < terms; i++) {
+            for (int j = 0; j < poly.terms; j++) {
+                float c = termArray[i].coef * poly.termArray[j].coef;
+                int e = termArray[i].exp + poly.termArray[j].exp;
+                ans.NewTerm(c, e);
+            }
+        }
+        return ans;
+    }
+    float Eval(float f) {
+        float ans = 0;
+        for (int i = 0; i < terms; i++) {
+            ans += termArray[i].coef * static_cast<float>(pow(f, termArray[i].exp));
+        }
+        return ans;
+    }
+};
+
+istream& operator>>(istream& is, Polynomial& p) {
+    int n;
+    if (!(is >> n)) return is;
+
+    p.terms = 0;
+
+    for (int i = 0; i < n; i++) {
+        float c;
+        int e;
+        is >> c >> e;
+        p.NewTerm(c, e);
+    }
+    return is;
 }
-if (n == 0) {
-return nfu(m - 1, 1);
-}
-return nfu(m - 1, nfu(m, n - 1));
+
+ostream& operator<<(ostream& os, const Polynomial& p) {
+    if (p.terms == 0) {
+        os << "0";
+        return os;
+    }
+    for (int i = 0; i < p.terms; i++) {
+        float c = p.termArray[i].coef;
+        int e = p.termArray[i].exp;
+        if (i > 0) {
+            if (c > 0) {
+                os << " + ";
+            }
+            else {
+                os << " - ";
+                c = -c;
+            }
+        }
+        else {
+            if (c < 0) {
+                os << "-";
+                c = -c;
+            }
+        }
+        if (e == 0) {
+            os << c;
+        }
+        else if (e == 1) {
+            if (c == 1.0f) os << "x";
+            else os << c << "x";
+        }
+        else {
+            if (c == 1.0f) os << "x^" << e;
+            else os << c << "x^" << e;
+        }
+    }
+    return os;
 }
 
 int main() {
-int m, n;
-cout << "輸入 m 和 n: ";
-cin >> m >> n;
-cout << "結果: " << nfu(m, n) << endl
-return 0;
-}
-```
-**非遞迴版本：**
-```cpp
-#include <iostream>
-using namespace std;
-int data(int m, int n) {
-    int nfu[100000]; 
-    int top = -1; 
-    top++;
-    nfu[top] = m;
-    while (top >= 0) {
-    int cur_m = nfu[top];
-        top--;
-        if (cur_m == 0) {
-            n = n + 1;
-        } 
-        else if (n == 0) {
-            top++;
-            nfu[top] = cur_m - 1; 
-            n = 1;
-        } 
-        else {
-            top++;
-            nfu[top] = cur_m - 1;
-            top++;
-            nfu[top] = cur_m;  
-            n = n - 1;
+    Polynomial A, B;
+    cout << "請輸入多項式 A:(項數/係數/次方 )";
+    cin >> A;
+    cout << "請輸入多項式 B(項數/係數/次方 ): ";
+    cin >> B;
+    int choice;
+    while (true) {
+        cout << "\n========操作選單========" << endl;
+        cout << "1. 顯示 A、B" << endl;
+        cout << "2. A + B" << endl;
+        cout << "3. A * B" << endl;
+        cout << "4. 計算 A(x)" << endl;
+        cout << "5. 計算 B(x)" << endl;
+        cout << "6. 重新輸入 A" << endl;
+        cout << "7. 重新輸入 B" << endl;
+        cout << "0. 結束程式" << endl;
+        cout << "選擇: ";
+
+        if (!(cin >> choice)) break;
+        if (choice == 0) {
+            break;
+        }
+        cout << endl;
+        if (choice == 1) {
+            cout << "A(x) = " << A << endl;
+            cout << "B(x) = " << B << endl;
+        }
+        else if (choice == 2) {
+            cout << "A(x) = " << A << endl;
+            cout << "B(x) = " << B << endl;
+            Polynomial sum = A.Add(B);
+            cout << "A + B = " << sum << endl;
+        }
+        else if (choice == 3) {
+            cout << "A(x) = " << A << endl;
+            cout << "B(x) = " << B << endl;
+            Polynomial prod = A.Mult(B);
+            cout << "A * B = " << prod << endl;
+        }
+        else if (choice == 4) {
+            float x;
+            cout << "請輸入 x 的值: ";
+            cin >> x;
+            cout << "A(" << x << ") = " << A.Eval(x) << endl;
+        }
+        else if (choice == 5) {
+            float x;
+            cout << "請輸入 x 的值: ";
+            cin >> x;
+            cout << "B(" << x << ") = " << B.Eval(x) << endl;
+        }
+        else if (choice == 6) {
+            cout << "請輸入多項式 A: ";
+            cin >> A;
+        }
+        else if (choice == 7) {
+            cout << "請輸入多項式 B: ";
+            cin >> B;
         }
     }
-    return n;
-}
-int main() {
-    int m, n;
-    cout << "請輸入 m 和 n: ";
-    cin >> m >> n;
-    cout << "計算結果 (非遞迴): " << data(m, n) << endl;
     return 0;
 }
 ```
+
 
 ## 測試與驗證
 
