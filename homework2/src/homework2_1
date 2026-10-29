@@ -17,15 +17,12 @@ private:
 class Polynomial {
     friend ostream& operator<<(ostream& os, const Polynomial& p);
     friend istream& operator>>(istream& is, Polynomial& p);
-
 private:
     Term* termArray;
     int capacity;
     int terms;
-
     void NewTerm(float c, int e) {
         if (c == 0.0f) return;
-
         for (int i = 0; i < terms; i++) {
             if (termArray[i].exp == e) {
                 termArray[i].coef += c;
@@ -38,7 +35,6 @@ private:
                 return;
             }
         }
-
         if (terms >= capacity) {
             capacity *= 2;
             Term* temp = new Term[capacity];
@@ -48,7 +44,6 @@ private:
             delete[] termArray;
             termArray = temp;
         }
-
         termArray[terms].coef = c;
         termArray[terms].exp = e;
         terms++;
@@ -64,14 +59,12 @@ private:
             }
         }
     }
-
 public:
     Polynomial() {
         capacity = 4;
         terms = 0;
         termArray = new Term[capacity];
     }
-
     Polynomial(const Polynomial& p) {
         capacity = p.capacity;
         terms = p.terms;
@@ -80,11 +73,9 @@ public:
             termArray[i] = p.termArray[i];
         }
     }
-
     ~Polynomial() {
         delete[] termArray;
     }
-
     Polynomial& operator=(const Polynomial& p) {
         if (this == &p) return *this;
 
@@ -97,7 +88,6 @@ public:
         }
         return *this;
     }
-
     Polynomial Add(Polynomial poly) {
         Polynomial ans;
         int i = 0, j = 0;
@@ -126,7 +116,6 @@ public:
 
         return ans;
     }
-
     Polynomial Mult(Polynomial poly) {
         Polynomial ans;
         for (int i = 0; i < terms; i++) {
@@ -147,7 +136,6 @@ public:
         return ans;
     }
 };
-
 istream& operator>>(istream& is, Polynomial& p) {
     int n;
     if (!(is >> n)) return is;
@@ -162,17 +150,14 @@ istream& operator>>(istream& is, Polynomial& p) {
     }
     return is;
 }
-
 ostream& operator<<(ostream& os, const Polynomial& p) {
     if (p.terms == 0) {
         os << "0";
         return os;
     }
-
     for (int i = 0; i < p.terms; i++) {
         float c = p.termArray[i].coef;
         int e = p.termArray[i].exp;
-
         if (i > 0) {
             if (c > 0) {
                 os << " + ";
@@ -188,7 +173,6 @@ ostream& operator<<(ostream& os, const Polynomial& p) {
                 c = -c;
             }
         }
-
         if (e == 0) {
             os << c;
         }
@@ -207,15 +191,13 @@ ostream& operator<<(ostream& os, const Polynomial& p) {
 int main() {
     Polynomial A, B;
 
-    cout << "請輸入多項式 A: ";
+    cout << "請輸入多項式 A:(項數/係數/次方 )";
     cin >> A;
-
-    cout << "請輸入多項式 B: ";
+    cout << "請輸入多項式 B(項數/係數/次方 ): ";
     cin >> B;
-
     int choice;
     while (true) {
-        cout << "\n======== Polynomial 選單 ========" << endl;
+        cout << "\n========操作選單========" << endl;
         cout << "1. 顯示 A、B" << endl;
         cout << "2. A + B" << endl;
         cout << "3. A * B" << endl;
@@ -227,13 +209,10 @@ int main() {
         cout << "選擇: ";
 
         if (!(cin >> choice)) break;
-
         if (choice == 0) {
             break;
         }
-
         cout << endl;
-
         if (choice == 1) {
             cout << "A(x) = " << A << endl;
             cout << "B(x) = " << B << endl;
@@ -271,6 +250,5 @@ int main() {
             cin >> B;
         }
     }
-
     return 0;
 }
