@@ -401,16 +401,13 @@ A + B = 5x^2 + 6
   - **未降冪版本（Append Only）：**  
     新增項目時，僅檢查是否有同次項；若無同次項則直接將項目加到陣列末尾（`terms++`）。
     ```cpp
-    // 【未降冪版本】直接附加在末尾
     termArray[terms].coef = c;
     termArray[terms].exp = e;
     terms++;
-    // 缺少排序步驟，陣列順序完全取決於使用者輸入順序
     ```
   - **有降冪版本（Insertion Sort）：**  
     新項目放入末端後，即刻使用插入排序法由後向前比對次方，若發現前方次項較小則進行交換，直到維持嚴格降冪排列。
     ```cpp
-    // 【有降冪版本】放入末尾後即刻執行插入排序
     termArray[terms].coef = c;
     termArray[terms].exp = e;
     terms++;
