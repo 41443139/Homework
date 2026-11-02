@@ -24,7 +24,6 @@ private:
     int terms;
 
     void NewTerm(float c, int e) {
-        // 排除係數為 0 或次方為負數的項
         if (c == 0.0f || e < 0) return;
 
         for (int i = 0; i < terms; i++) {
