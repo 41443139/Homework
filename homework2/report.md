@@ -34,6 +34,9 @@
 ---
 
 ## 程式實作 ##
+
+以下為此次作業的完整 C++ 程式碼：
+
 ```cpp
 #include <iostream>
 #include <cmath>
